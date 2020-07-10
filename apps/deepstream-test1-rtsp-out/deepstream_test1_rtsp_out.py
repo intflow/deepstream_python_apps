@@ -310,16 +310,16 @@ def main(args):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='RTSP Output Sample Application Help ')
-    parser.add_argument("-i", "--input",
-                  help="Path to input H264 elementry stream", required=True)
+    parser.add_argument("-i", "--input", default="/opt/nvidia/deepstream/deepstream/samples/streams/sample_720p.h264",
+                  help="Path to input H264 elementry stream", required=False)
     parser.add_argument("-c", "--codec", default="H264",
                   help="RTSP Streaming Codec H264/H265 , default=H264", choices=['H264','H265'])
-    parser.add_argument("-b", "--bitrate", default=4000000,
+    parser.add_argument("-b", "--bitrate", default=1000000,
                   help="Set the encoding bitrate ", type=int)
     # Check input arguments
-    if len(sys.argv)==1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
+    #if len(sys.argv)==1:
+    #    parser.print_help(sys.stderr)
+    #    sys.exit(1)
     args = parser.parse_args()
     global codec
     global bitrate
