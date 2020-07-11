@@ -51,7 +51,8 @@ PGIE_CLASS_ID_PERSON = 2
 PGIE_CLASS_ID_ROADSIGN = 3
 MUXER_OUTPUT_WIDTH=1920
 MUXER_OUTPUT_HEIGHT=1080
-MUXER_BATCH_TIMEOUT_USEC=40000
+MUXER_BATCH_TIMEOUT_USEC=400000
+BATCH_SIZE=8
 TILED_OUTPUT_WIDTH=1280
 TILED_OUTPUT_HEIGHT=720
 GST_CAPS_FEATURES_NVMM="memory:NVMM"
@@ -367,13 +368,13 @@ def main(args):
 
     streammux.set_property('width', MUXER_OUTPUT_WIDTH)
     streammux.set_property('height', MUXER_OUTPUT_HEIGHT)
-    streammux.set_property('batch-size', number_sources)
+    streammux.set_property('batch-size', BATCH_SIZE)
     streammux.set_property('batched-push-timeout', MUXER_BATCH_TIMEOUT_USEC)
     pgie.set_property('config-file-path', "dstest_pgie_config_b30.txt")
     #pgie_batch_size=pgie.get_property("batch-size")
     #if(pgie_batch_size != number_sources):
         #print("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources," \n")
-    pgie.set_property("batch-size",number_sources)
+    pgie.set_property("batch-size",BATCH_SIZE)
     tiler_rows=int(math.sqrt(number_sources))
     tiler_columns=int(math.ceil((1.0*number_sources)/tiler_rows))
     tiler.set_property("rows",tiler_rows)
