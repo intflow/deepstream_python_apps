@@ -58,7 +58,7 @@ GST_CAPS_FEATURES_NVMM="memory:NVMM"
 pgie_classes_str= ["Vehicle", "TwoWheeler", "Person","RoadSign"]
 SINK='RTSP'
 codec='H264'
-bitrate=8000000
+bitrate=4000000
 SHOW_FPS=True
 
 # tiler_sink_pad_buffer_probe  will extract metadata received on OSD sink pad
@@ -369,7 +369,7 @@ def main(args):
     streammux.set_property('height', MUXER_OUTPUT_HEIGHT)
     streammux.set_property('batch-size', number_sources)
     streammux.set_property('batched-push-timeout', MUXER_BATCH_TIMEOUT_USEC)
-    pgie.set_property('config-file-path', "dstest1_pgie_config.txt")
+    pgie.set_property('config-file-path', "dstest_pgie_config_b30.txt")
     #pgie_batch_size=pgie.get_property("batch-size")
     #if(pgie_batch_size != number_sources):
         #print("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources," \n")
