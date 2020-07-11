@@ -38,6 +38,7 @@ import platform
 from common.is_aarch_64 import is_aarch64
 from common.bus_call import bus_call
 from common.FPS import GETFPS
+from threading import Thread
 
 import pyds
 
@@ -49,15 +50,16 @@ PGIE_CLASS_ID_BICYCLE = 1
 PGIE_CLASS_ID_PERSON = 2
 PGIE_CLASS_ID_ROADSIGN = 3
 MUXER_OUTPUT_WIDTH=1920
-MUXER_OUTPUT_HEIGHT=80
-MUXER_BATCH_TIMEOUT_USEC=4000000
-TILED_OUTPUT_WIDTH=1920
-TILED_OUTPUT_HEIGHT=1080
+MUXER_OUTPUT_HEIGHT=1080
+MUXER_BATCH_TIMEOUT_USEC=40000
+TILED_OUTPUT_WIDTH=1280
+TILED_OUTPUT_HEIGHT=720
 GST_CAPS_FEATURES_NVMM="memory:NVMM"
 pgie_classes_str= ["Vehicle", "TwoWheeler", "Person","RoadSign"]
 SINK='RTSP'
 codec='H264'
-bitrate=1000000
+bitrate=8000000
+SHOW_FPS=True
 
 # tiler_sink_pad_buffer_probe  will extract metadata received on OSD sink pad
 # and update params for drawing rectangle, object information etc.
@@ -113,7 +115,7 @@ def tiler_src_pad_buffer_probe(pad,info,u_data):
                 l_obj=l_obj.next
             except StopIteration:
                 break
-        """display_meta=pyds.nvds_acquire_display_meta_from_pool(batch_meta)
+        '''display_meta=pyds.nvds_acquire_display_meta_from_pool(batch_meta)
         display_meta.num_labels = 1
         py_nvosd_text_params = display_meta.text_params[0]
         py_nvosd_text_params.display_text = "Frame Number={} Number of Objects={} Vehicle_count={} Person_count={}".format(frame_number, num_rects, vehicle_count, person)
@@ -131,11 +133,12 @@ def tiler_src_pad_buffer_probe(pad,info,u_data):
         py_nvosd_text_params.text_bg_clr.blue = 0.0
         py_nvosd_text_params.text_bg_clr.alpha = 1.0
         #print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Vehicle_count=",vehicle_count,"Person_count=",person)
-        pyds.nvds_add_display_meta_to_frame(frame_meta, display_meta)"""
-        print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Vehicle_count=",obj_counter[PGIE_CLASS_ID_VEHICLE],"Person_count=",obj_counter[PGIE_CLASS_ID_PERSON])
+        pyds.nvds_add_display_meta_to_frame(frame_meta, display_meta)'''
+        ##print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Vehicle_count=",obj_counter[PGIE_CLASS_ID_VEHICLE],"Person_count=",obj_counter[PGIE_CLASS_ID_PERSON])
 
         # Get frame rate through this probe
-        fps_streams["stream{0}".format(frame_meta.pad_index)].get_fps()
+        if SHOW_FPS == True:
+            fps_streams["stream{0}".format(frame_meta.pad_index)].get_fps()
         try:
             l_frame=l_frame.next
         except StopIteration:
@@ -174,7 +177,7 @@ def decodebin_child_added(child_proxy,Object,name,user_data):
     if(name.find("decodebin") != -1):
         Object.connect("child-added",decodebin_child_added,user_data)   
     if(is_aarch64() and name.find("nvv4l2decoder") != -1):
-        print("Seting bufapi_version\n")
+        print("Setting bufapi_version\n")
         Object.set_property("bufapi-version",True)
 
 def create_source_bin(index,uri):
@@ -213,14 +216,34 @@ def create_source_bin(index,uri):
         return None
     return nbin
 
+def select_source_from_tile(tiler, source_num):
+    while True:  # making a loop
+        source_selected = input("select source number ")
+        try:
+            source_selected = int(source_selected)
+            if source_selected == 0:
+                tiler.set_property("show-source", -1)
+                print("===== Tiled mode =====")
+            elif source_selected <= source_num:
+                tiler.set_property("show-source", source_selected-1)
+                print("===== Source{} is selected =====".format(source_selected))
+            else:
+                print("===== Source{} is invalid =====".format(source_selected))
+        except:
+            print("===== Press only the integer numbers =====")
 def main(args):
+    ### Default args for debug
+    ##args = ['_', '_', '_']
+    ##args[1] = "rtsp://192.168.0.200:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
+    ##args[2] = "rtsp://192.168.0.201:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
+        
     # Check input arguments
     if len(args) < 2:
         sys.stderr.write("usage: %s <uri1> [uri2] ... [uriN]\n" % args[0])
         sys.exit(1)
-
-    for i in range(0,len(args)-1):
-        fps_streams["stream{0}".format(i)]=GETFPS(i)
+    if SHOW_FPS == True:
+        for i in range(0,len(args)-1):
+            fps_streams["stream{0}".format(i)]=GETFPS(i)
     number_sources=len(args)-1
 
     # Standard GStreamer initialization
@@ -296,6 +319,9 @@ def main(args):
         if not encoder:
             sys.stderr.write(" Unable to create encoder")
         encoder.set_property('bitrate', bitrate)
+        encoder.set_property('profile', 0)
+        #H264 Profile - 0=Baseline 2=Main 4=High
+        #H265 Profile - 0=Main 1=Main10
         if is_aarch64():
             encoder.set_property('preset-level', 1)
             encoder.set_property('insert-sps-pps', 1)
@@ -320,10 +346,9 @@ def main(args):
         sink.set_property('host', '224.224.255.255')
         sink.set_property('port', updsink_port_num)
         sink.set_property('async', False)
-        sink.set_property('sync', 1)
+        sink.set_property('sync', 0)
         
-        #print("Playing file %s " %stream_path)
-        #source.set_property('location', stream_path)
+
     elif SINK=='EGL':
         if(is_aarch64()):
             print("Creating transform \n ")
@@ -340,21 +365,24 @@ def main(args):
         print("Atleast one of the sources is live")
         streammux.set_property('live-source', 1)
 
-    streammux.set_property('width', 1920)
-    streammux.set_property('height', 1080)
+    streammux.set_property('width', MUXER_OUTPUT_WIDTH)
+    streammux.set_property('height', MUXER_OUTPUT_HEIGHT)
     streammux.set_property('batch-size', number_sources)
-    streammux.set_property('batched-push-timeout', 4000000)
-    pgie.set_property('config-file-path', "dstest3_pgie_config.txt")
-    pgie_batch_size=pgie.get_property("batch-size")
-    if(pgie_batch_size != number_sources):
-        print("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources," \n")
-        pgie.set_property("batch-size",number_sources)
+    streammux.set_property('batched-push-timeout', MUXER_BATCH_TIMEOUT_USEC)
+    pgie.set_property('config-file-path', "dstest1_pgie_config.txt")
+    #pgie_batch_size=pgie.get_property("batch-size")
+    #if(pgie_batch_size != number_sources):
+        #print("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources," \n")
+    pgie.set_property("batch-size",number_sources)
     tiler_rows=int(math.sqrt(number_sources))
     tiler_columns=int(math.ceil((1.0*number_sources)/tiler_rows))
     tiler.set_property("rows",tiler_rows)
     tiler.set_property("columns",tiler_columns)
     tiler.set_property("width", TILED_OUTPUT_WIDTH)
     tiler.set_property("height", TILED_OUTPUT_HEIGHT)
+
+    #Source selection from tile thread
+    Thread(target=select_source_from_tile, args=([tiler, number_sources])).start()
 
     print("Adding elements to Pipeline \n")
     pipeline.add(pgie)
@@ -376,10 +404,10 @@ def main(args):
     pgie.link(tiler)
     tiler.link(nvvidconv)
     nvvidconv.link(nvosd)
-    nvosd.link(nvvidconv_postosd)
-    nvvidconv_postosd.link(caps)
 
     if SINK=='RTSP':
+        nvosd.link(nvvidconv_postosd)
+        nvvidconv_postosd.link(caps)
         caps.link(encoder)
         encoder.link(rtppay)
         rtppay.link(sink)
