@@ -51,8 +51,9 @@ PGIE_CLASS_ID_PERSON = 2
 PGIE_CLASS_ID_ROADSIGN = 3
 MUXER_OUTPUT_WIDTH=1920
 MUXER_OUTPUT_HEIGHT=1080
-MUXER_BATCH_TIMEOUT_USEC=400000
+MUXER_BATCH_TIMEOUT_USEC=200000
 BATCH_SIZE=8
+INTERVAL=0
 TILED_OUTPUT_WIDTH=1280
 TILED_OUTPUT_HEIGHT=720
 GST_CAPS_FEATURES_NVMM="memory:NVMM"
@@ -116,12 +117,12 @@ def tiler_src_pad_buffer_probe(pad,info,u_data):
                 l_obj=l_obj.next
             except StopIteration:
                 break
-        '''display_meta=pyds.nvds_acquire_display_meta_from_pool(batch_meta)
+        display_meta=pyds.nvds_acquire_display_meta_from_pool(batch_meta)
         display_meta.num_labels = 1
         py_nvosd_text_params = display_meta.text_params[0]
-        py_nvosd_text_params.display_text = "Frame Number={} Number of Objects={} Vehicle_count={} Person_count={}".format(frame_number, num_rects, vehicle_count, person)
-        py_nvosd_text_params.x_offset = 10;
-        py_nvosd_text_params.y_offset = 12;
+        py_nvosd_text_params.display_text = "Number of Objects={} Vehicle_count={} Person_count={}".format(num_rects, obj_counter[PGIE_CLASS_ID_VEHICLE], obj_counter[PGIE_CLASS_ID_PERSON])
+        py_nvosd_text_params.x_offset = 10
+        py_nvosd_text_params.y_offset = 12
         py_nvosd_text_params.font_params.font_name = "Serif"
         py_nvosd_text_params.font_params.font_size = 10
         py_nvosd_text_params.font_params.font_color.red = 1.0
@@ -134,7 +135,7 @@ def tiler_src_pad_buffer_probe(pad,info,u_data):
         py_nvosd_text_params.text_bg_clr.blue = 0.0
         py_nvosd_text_params.text_bg_clr.alpha = 1.0
         #print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Vehicle_count=",vehicle_count,"Person_count=",person)
-        pyds.nvds_add_display_meta_to_frame(frame_meta, display_meta)'''
+        pyds.nvds_add_display_meta_to_frame(frame_meta, display_meta)
         ##print("Frame Number=", frame_number, "Number of Objects=",num_rects,"Vehicle_count=",obj_counter[PGIE_CLASS_ID_VEHICLE],"Person_count=",obj_counter[PGIE_CLASS_ID_PERSON])
 
         # Get frame rate through this probe
@@ -370,11 +371,12 @@ def main(args):
     streammux.set_property('height', MUXER_OUTPUT_HEIGHT)
     streammux.set_property('batch-size', BATCH_SIZE)
     streammux.set_property('batched-push-timeout', MUXER_BATCH_TIMEOUT_USEC)
-    pgie.set_property('config-file-path', "dstest_pgie_config_b30.txt")
+    pgie.set_property('config-file-path', "dstest_pgie_config_b8.txt")
     #pgie_batch_size=pgie.get_property("batch-size")
     #if(pgie_batch_size != number_sources):
         #print("WARNING: Overriding infer-config batch-size",pgie_batch_size," with number of sources ", number_sources," \n")
     pgie.set_property("batch-size",BATCH_SIZE)
+    pgie.set_property("interval",INTERVAL)
     tiler_rows=int(math.sqrt(number_sources))
     tiler_columns=int(math.ceil((1.0*number_sources)/tiler_rows))
     tiler.set_property("rows",tiler_rows)
