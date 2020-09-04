@@ -234,10 +234,10 @@ def select_source_from_tile(tiler, source_num):
         except:
             print("===== Press only the integer numbers =====")
 def main(args):
-    ### Default args for debug
-    ##args = ['_', '_', '_']
-    ##args[1] = "rtsp://192.168.0.200:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
-    ##args[2] = "rtsp://192.168.0.201:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
+    # Default args for debug
+    args = ['_', '_', '_']
+    args[1] = "rtsp://192.168.0.200:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
+    args[2] = "rtsp://192.168.0.201:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
         
     # Check input arguments
     if len(args) < 2:
