@@ -234,10 +234,10 @@ def select_source_from_tile(tiler, source_num):
         except:
             print("===== Press only the integer numbers =====")
 def main(args):
-    ### Default args for debug
-    ##args = ['_', '_', '_']
-    ##args[1] = "rtsp://192.168.0.200:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
-    ##args[2] = "rtsp://192.168.0.201:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
+    # # Default args for debug
+    # args = ['_', '_', '_']
+    # args[1] = "rtsp://192.168.0.200:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
+    # args[2] = "rtsp://192.168.0.201:554/user=admin&password=123456&channel=1&stream=0.sdp?real_stream--rtp-caching=4000"
         
     # Check input arguments
     if len(args) < 2:
@@ -437,9 +437,9 @@ def main(args):
     factory = GstRtspServer.RTSPMediaFactory.new()
     factory.set_launch( "( udpsrc name=pay0 port=%d buffer-size=524288 caps=\"application/x-rtp, media=video, clock-rate=90000, encoding-name=(string)%s, payload=96 \" )" % (updsink_port_num, codec))
     factory.set_shared(True)
-    server.get_mount_points().add_factory("/ds-test", factory)
+    server.get_mount_points().add_factory("/main", factory)
     
-    print("\n *** DeepStream: Launched RTSP Streaming at rtsp://localhost:%d/ds-test ***\n\n" % rtsp_port_num)
+    print("\n *** DeepStream: Launched RTSP Streaming at rtsp://localhost:%d/main ***\n\n" % rtsp_port_num)
 
     tiler_src_pad=pgie.get_static_pad("src")
     if not tiler_src_pad:
@@ -487,5 +487,3 @@ def main(args):
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
-
-
