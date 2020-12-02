@@ -227,7 +227,7 @@ def main(args):
     streammux.set_property('batch-size', 1)
     streammux.set_property('batched-push-timeout', 4000000)
     
-    pgie.set_property('config-file-path', "dstest1_pgie_config.txt")
+    pgie.set_property('config-file-path', "./dstest1_pgie_config.txt")
     
     print("Adding elements to Pipeline \n")
     pipeline.add(source)
